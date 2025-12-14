@@ -1,7 +1,7 @@
 # Windows Autopilot — User-Driven (Entra ID Join)
 
 ## Overview
-User-driven Windows Autopilot deployment for modern workplace devices with cloud-native identity.
+User-driven Windows Autopilot deployment for cloud-native modern workplace devices using Microsoft Entra ID.
 
 ## Design decisions
 - User-Driven mode to support MFA and Conditional Access at sign-in
@@ -16,7 +16,8 @@ User-driven Windows Autopilot deployment for modern workplace devices with cloud
 - OOBE: Privacy, license, account options hidden
 - Language: User select
 - Device naming: DEV-%SERIAL%
-- Assignment: Dynamic group `Intune_Devices_Autopilot`
+- Assignment: Dynamic device group based on ZTDId attribute
+
 
 ## Evidence
 See screenshots in `screenshots/`.
