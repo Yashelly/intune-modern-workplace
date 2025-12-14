@@ -2,7 +2,9 @@
 
 Reference implementation of a modern workplace environment using **Microsoft Intune** and **Microsoft Entra ID**.
 
-This repository is **portfolio-style**: it contains documented configurations, screenshots as proof, and JSON/PowerShell artifacts where export is possible.
+Evidence is stored as screenshots and exported artifacts to keep the implementation verifiable and reproducible.
+
+This repository is portfolio-oriented and contains documented configurations, screenshots as evidence, and JSON/PowerShell artifacts where export is supported.
 
 ## What’s covered
 - Windows Autopilot (User-Driven, Microsoft Entra joined)
@@ -15,7 +17,8 @@ This repository is **portfolio-style**: it contains documented configurations, s
 
 ## Repository structure
 Each folder contains:
-- `README.md` — What / Why / How
+
+- `README.md` — Overview / Design decisions / Implementation
 - `screenshots/` — evidence (portal views, status pages)
 - `json/` — exported policies (when supported)
 - `scripts/` — automation
