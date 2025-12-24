@@ -1,97 +1,153 @@
 # Conditional Access
 
 ## Overview
-Conditional Access policies are used to enforce Zero Trust access controls for cloud resources in Microsoft Entra ID.
+This section documents the Conditional Access (CA) baseline implemented
+in Microsoft Entra ID to enforce Zero Trust access controls for
+corporate cloud resources.
 
-This configuration focuses on:
-- Multi-factor authentication (MFA) enforcement
-- Blocking legacy authentication
-- Device-based access control using Intune compliance
-- Secure emergency access via break-glass account
+The policies are designed to:
+- Reduce credential-based attack surface
+- Enforce strong user authentication
+- Ensure access is granted only from compliant devices
+- Maintain recoverability through a dedicated break-glass account
+
+All controls are validated using policy configuration evidence
+and sign-in evaluation results.
 
 ---
 
-## Break-glass account
-A dedicated break-glass account is created to ensure administrative access in case Conditional Access policies block standard admin accounts.
+## Design Principles
+The Conditional Access design follows these principles:
 
-**Design decisions:**
-- Separate cloud-only account
+- **Zero Trust:** Access is continuously evaluated based on user,
+  device, and authentication context
+- **Layered controls:** MFA, device compliance, and protocol restrictions
+  are enforced independently
+- **Least privilege & recoverability:** Emergency access is preserved
+  through explicit break-glass exclusions
+- **Auditability:** Enforcement is demonstrated through sign-in logs
+
+---
+
+## Targeting Model
+Conditional Access policies are evaluated at **user sign-in** and
+are therefore scoped at the user level.
+
+Targeting approach:
+- **Included:** All users
+- **Excluded:** Break-glass account
+- **Resources:** All cloud apps
+
+This model provides consistent coverage while preventing
+administrative lockout scenarios.
+
+---
+
+## Conditional Access Flow
+
+```mermaid
+flowchart LR
+    User[User sign-in] --> MFA[MFA evaluation]
+    MFA -->|Success| Device[Device compliance check]
+    MFA -->|Failure| Block[Access denied]
+
+    Device -->|Compliant| Access[Access granted]
+    Device -->|Non-compliant| Block
+
+    Legacy[Legacy authentication] --> Block
+```
+
+---
+
+## Rollout Strategy
+
+Conditional Access policies are rolled out using a staged approach
+to minimize the risk of service disruption and administrative lockout.
+
+### Rollout phases
+1. **Report-only**
+   - Policies are initially evaluated in report-only mode
+   - Sign-in logs are reviewed to identify potential impact
+
+2. **Pilot enforcement**
+   - Policies are enforced for a limited pilot scope
+   - Authentication and access behavior is validated using sign-in logs
+
+3. **Full enforcement**
+   - Policies are enabled tenant-wide
+   - Break-glass account remains excluded to ensure recoverability
+
+This approach allows safe validation of Conditional Access behavior
+before broad enforcement.
+
+---
+
+## Implemented Policies
+
+### CA – Require MFA
+Enforces multi-factor authentication for all user sign-ins to
+cloud applications.
+
+- Control type: Authentication
+- Enforcement: Grant access only after MFA challenge
+- Evidence: Policy configuration and sign-in logs
+
+---
+
+### CA – Require Compliant Device
+Restricts access to cloud resources to devices that meet
+Microsoft Intune compliance requirements.
+
+- Control type: Device posture
+- Enforcement: Require device to be marked as compliant
+- Evidence: Policy configuration, user-facing denial, and sign-in logs
+
+---
+
+### CA – Block Legacy Authentication
+Blocks legacy authentication protocols that do not support
+modern security controls.
+
+- Control type: Protocol restriction
+- Enforcement: Block access for legacy authentication clients
+- Evidence: Policy configuration and client app conditions
+
+---
+
+### Break-glass Account
+A dedicated emergency administrative account used exclusively
+for recovery scenarios.
+
 - Excluded from all Conditional Access policies
 - Assigned Global Administrator role
-- Used only for emergency access
-
-**Evidence:**
-- `01-breakglass_user_created.png`
-- `02-breakglass_role_assignment.png`
+- Not used for daily administration
+- Evidence: User creation and role assignment
 
 ---
 
-## CA – Require MFA
-
-**Purpose:**  
-Enforce multi-factor authentication for all users accessing cloud applications.
-
-**Configuration:**
-- Users: All users  
-- Exclusions: Break-glass account  
-- Target resources: All cloud apps  
-- Grant: Require multi-factor authentication  
-- Policy state: Enabled
-
-**Result:**  
-MFA challenge is enforced during sign-in.
-
-**Evidence:**
-- `01-ca_policy01_require_mfa_overview.png`
-- `02-ca_policy01_require_mfa_grant.png`
-- `03-sign-inlog_ca_require_mfa_applied.png`
+## Operational Considerations
+- Conditional Access policies are enabled in enforcement mode
+  unless explicitly documented otherwise
+- Changes to CA policies should be validated using sign-in logs
+  before broad rollout
+- Break-glass account access should be audited after each use
 
 ---
 
-## CA – Block Legacy Authentication
+## Scope Boundary
+This section focuses exclusively on **identity-based access controls**.
 
-**Purpose:**  
-Prevent authentication methods that do not support modern security controls.
+It does not cover:
+- Intune compliance policy definitions
+- Endpoint configuration profiles
+- Application deployment or protection policies
 
-**Configuration:**
-- Users: All users  
-- Target resources: All cloud apps  
-- Client apps:
-  - Exchange ActiveSync clients
-  - Other legacy authentication clients
-- Grant: Block access  
-- Policy state: Enabled
-
-**Result:**  
-Legacy authentication protocols are blocked.
-
-**Evidence:**
-- `01-ca_policy03_block_legacy_overview.png`
-- `02-ca_policy03_block_legacy_conditions.png`
+Those controls are documented in their respective sections
+of the repository.
 
 ---
 
-## CA – Require Compliant Device
-
-**Purpose:**  
-Ensure that access to corporate cloud resources is allowed only from Intune-compliant Windows devices.
-
-**Configuration:**
-- Users: All users  
-- Exclusions: Break-glass account  
-- Target resources: All cloud apps  
-- Conditions: Windows devices  
-- Grant: Require device to be marked as compliant  
-- Policy state: Enabled
-
-**Result:**  
-Access is granted only if the device meets Intune compliance requirements.
-
----
-
-## Policy export
-All Conditional Access policies in this section are additionally exported in JSON format for reference and configuration traceability.
-
-**Export file:**
-- `json/ca_policies_export.json`
-
+## Summary
+This Conditional Access baseline provides a layered, auditable,
+and recoverable identity security posture aligned with
+enterprise Zero Trust principles.
